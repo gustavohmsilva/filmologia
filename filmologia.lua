@@ -32,6 +32,14 @@ local db = {}
                 cursor:close()
                 return result
         end
+        db.last_id = function(conn)
+                local query = "SELECT id FROM catalogo ORDER BY id DESC LIMIT 1"
+                local cursor = assert(conn:execute(query))
+                local result = {}
+                local line = cursor:fetch({}, 'a')
+                cursor:close()
+                return line
+        end
         db.delete = function(conn, rowid)
                 local query = string.format('DELETE FROM catalogo WHERE "id" = %s', rowid)
                 assert(conn:execute(query))
@@ -81,19 +89,20 @@ function event_criar()
         btn_cadastrar:setenabled(true)
         btn_cadastrar:setstyle{width = 100}
 
-        btn_cadastrar.onclick = function() 
+        function btn_cadastrar.onclick() 
                 db.create(
                         conexao, 
                         entry_filme:gettext(), 
                         entry_produtora:gettext(), 
                         entry_ano:gettext()
-                ) 
+                )
+                local temp = db.last_id(conexao)
                 tabela:addrow{
+                        tostring(temp.id),
                         entry_filme:gettext(), 
                         entry_produtora:gettext(), 
                         entry_ano:gettext()
                 }
-                conexao:commit()
                 janela:close()
         end
 
@@ -141,10 +150,9 @@ function event_deletar()
                 width = 100
         }
 
-        btn_deletar.onclick = function() 
+        function btn_deletar.onclick() 
                 db.delete(conexao, entry_id:gettext()) 
                 tabela:removerowat(entry_id:gettext())
-                conexao:commit()
                 janela:close()
         end
 
