@@ -1,5 +1,4 @@
 local gui = require('yue.gui')
-gui.Table = gui.TableModel
 local luasql = require 'luasql.sqlite3'
 
 local db = {}
@@ -47,6 +46,50 @@ local db = {}
         end
 
 local conexao = db.connect('filmologia.db')
+
+local janela = gui.Window.create{}
+janela.onclose = gui.MessageLoop.quit
+janela:settitle('Catálogo Filmográfico')
+janela:setcontentsize{width = 640, height = 480}
+
+local container = gui.Container.create()
+container:setstyle{padding = 10}
+
+local dados_db = db.read_all(conexao)
+tabela = gui.SimpleTableModel.create(4)
+for _,v in ipairs(dados_db) do
+tabela:addrow{
+                tostring(v.id),
+                v.Filme,
+                v.Produtora,
+                tostring(v.Ano)
+        }
+end
+
+local container_tabela = gui.Table.create()
+local colunas = {
+        {name = 'Código', width = 80},
+        {name = 'Filme', width = 240},
+        {name = 'Produtora', width = 200},
+        {name = 'Ano', width = 90}
+}
+for _,v in ipairs(colunas) do
+        container_tabela:addcolumnwithoptions(v.name, {width = v.width})
+end
+container_tabela:setstyle{flex=1}
+container_tabela:setmodel(tabela)
+
+local barra_menu = gui.Container.create()
+barra_menu:setstyle{padding = 0, flexdirection = 'row'}
+
+
+local btn_deletar = gui.Button.create('Deletar')
+btn_deletar:setenabled(true)
+btn_deletar:setstyle{width = 100}
+
+local btn_criar = gui.Button.create('Criar')
+btn_criar:setenabled(true)
+btn_criar:setstyle{width = 100}
 
 function event_criar()
         local janela = gui.Window.create{}
@@ -120,93 +163,12 @@ function event_criar()
         janela:center()
         janela:activate()
 end
+
 function event_deletar()
-        local janela = gui.Window.create{}
-        janela:settitle('Inserir Obra')
-        janela:setcontentsize{
-                width = 400,
-                height = 50
-        }
-
-        local container = gui.Container.create()
-        container:setstyle{
-                padding = 10,
-                height = 30,
-                flexdirection = 'row'
-        }
-
-        local label_id = gui.Label.create('ID para Deletar: ')
-        label_id:setstyle{  
-                width = 120
-        }
-        label_id:setalign('start')
-        
-        local entry_id = gui.Entry.create()
-        entry_id:setstyle{flex=1}
-
-        local btn_deletar = gui.Button.create('Deletar')
-        btn_deletar:setenabled(true)
-        btn_deletar:setstyle{
-                width = 100
-        }
-
-        function btn_deletar.onclick() 
-                db.delete(conexao, entry_id:gettext()) 
-                tabela:removerowat(entry_id:gettext())
-                janela:close()
-        end
-
-        janela:setcontentview(container)
-        container:addchildview(label_id)
-        container:addchildview(entry_id)
-        container:addchildview(btn_deletar)
-        janela:center()
-        janela:activate()
+        rownumber = container_tabela:getselectedrow()
+        db.delete(conexao, tabela:getvalue(1, rownumber))
+        tabela:removerowat(rownumber)
 end
-
-local janela = gui.Window.create{}
-janela.onclose = gui.MessageLoop.quit
-janela:settitle('Catálogo Filmográfico')
-janela:setcontentsize{width = 640, height = 480}
-
-local container = gui.Container.create()
-container:setstyle{padding = 10}
-
-local dados_db = db.read_all(conexao)
-tabela = gui.SimpleTableModel.create(4)
-for _,v in ipairs(dados_db) do
-tabela:addrow{
-                tostring(v.id),
-                v.Filme,
-                v.Produtora,
-                tostring(v.Ano)
-        }
-end
-
-local container_tabela = gui.Table.create()
-local colunas = {
-        {name = 'Código', width = 80},
-        {name = 'Filme', width = 240},
-        {name = 'Produtora', width = 200},
-        {name = 'Ano', width = 90}
-}
-for _,v in ipairs(colunas) do
-        container_tabela:addcolumnwithoptions(v.name, {width = v.width})
-end
-container_tabela:setstyle{flex=1}
-container_tabela:setmodel(tabela)
-
-local barra_menu = gui.Container.create()
-barra_menu:setstyle{padding = 0, flexdirection = 'row'}
-
-
-local btn_deletar = gui.Button.create('Deletar')
-btn_deletar:setenabled(true)
-btn_deletar:setstyle{width = 100}
-
-local btn_criar = gui.Button.create('Criar')
-btn_criar:setenabled(true)
-btn_criar:setstyle{width = 100}
 
 btn_criar.onclick = event_criar
 btn_deletar.onclick = event_deletar
