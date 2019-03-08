@@ -91,7 +91,7 @@ local btn_criar = gui.Button.create('Criar')
 btn_criar:setenabled(true)
 btn_criar:setstyle{width = 100}
 
-function event_criar()
+function btn_criar.onclick()
         local janela = gui.Window.create{}
         janela:settitle('Inserir Obra')
         janela:setcontentsize{width = 600, height = 110}
@@ -122,7 +122,7 @@ function event_criar()
         local entry_produtora = gui.Entry.create()
         entry_produtora:setstyle{flex=1}
         
-        local label_ano = gui.Label.create('Filme: ')
+        local label_ano = gui.Label.create('Ano: ')
         label_ano:setstyle{width = 80}
         
         local entry_ano = gui.Entry.create()
@@ -164,14 +164,11 @@ function event_criar()
         janela:activate()
 end
 
-function event_deletar()
+function btn_deletar.onclick()
         rownumber = container_tabela:getselectedrow()
         db.delete(conexao, tabela:getvalue(1, rownumber))
         tabela:removerowat(rownumber)
 end
-
-btn_criar.onclick = event_criar
-btn_deletar.onclick = event_deletar
 
 janela:setcontentview(container)
 container:addchildview(container_tabela)
